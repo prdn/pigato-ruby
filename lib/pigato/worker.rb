@@ -1,5 +1,6 @@
 require "json"
 require "ffi-rzmq"
+require "securerandom"
 
 class PigatoWorker
   HEARTBEAT_LIVENESS = 3 # 3-5 is reasonable
@@ -87,7 +88,7 @@ class PigatoWorker
     end
 
     @worker = @context.socket ZMQ::DEALER
-    @worker.setsockopt ZMQ::IDENTITY, 'WRK01'
+    @worker.setsockopt ZMQ::IDENTITY, SecureRandom.uuid
     @worker.setsockopt ZMQ::LINGER, 0 
     @worker.connect @broker
     @poller.register @worker, ZMQ::POLLIN

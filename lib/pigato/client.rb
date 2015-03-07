@@ -1,5 +1,6 @@
 require "json"
 require "ffi-rzmq"
+require "securerandom"
 
 class PigatoClient
 
@@ -15,7 +16,7 @@ class PigatoClient
   def send service, request, timeout = 2500
     request = [request.to_json]
 
-    rid = 'RID' + (rand() * 1000000).to_s
+    rid = SecureRandom.uuid
     request = [Pigato::C_CLIENT, Pigato::W_REQUEST, service, rid].concat(request)
     @client.send_strings request
 
@@ -57,7 +58,7 @@ class PigatoClient
 
     @client = @context.socket ZMQ::DEALER
     @client.setsockopt ZMQ::LINGER, 0
-    @client.setsockopt ZMQ::IDENTITY, "C" + (rand() * 10).to_s
+    @client.setsockopt ZMQ::IDENTITY, SecureRandom.uuid
     @client.connect @broker
     @poller.register @client, ZMQ::POLLIN
   end
