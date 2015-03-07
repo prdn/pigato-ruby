@@ -1,7 +1,3 @@
-require "json"
-require "ffi-rzmq"
-require "pigato/version"
-require "pigato/proto.rb"
-
-module Pigato
-end
+require_relative "pigato/version.rb"
+require_relative "pigato/proto.rb"
+require_relative "pigato/client.rb"

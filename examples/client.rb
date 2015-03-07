@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require "rubygems"
-require "pigato"
+require "#{File.dirname(__FILE__)}/../lib/pigato.rb"
 
 client = PigatoClient.new('tcp://localhost:55555')
 requests = 10
