@@ -1,4 +1,7 @@
-# Pigato
+# PIGATO-RUBY
+
+* [Official PIGATO project page](http://prdn.github.io/pigato/) 
+* [Node.js and io.js broker/client/worker](https://github.com/prdn/pigato)
 
 Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/pigato`. To experiment with that code, run `bin/console` for an interactive prompt.
 
@@ -21,8 +24,12 @@ Or install it yourself as:
     $ gem install pigato
 
 ## Usage
+Example client/worker echo:
 
-TODO: Write usage instructions here
+* `examples/echo_client.rb`
+* `examples/echo_worker.rb`
+
+In order to run the example you need to run Node.js PIGATO example Broker from the [main project](https://github.com/prdn/pigato/tree/master/examples)
 
 ## Development
 
