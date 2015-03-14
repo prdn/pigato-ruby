@@ -25,7 +25,8 @@ class PigatoClient
 
     data = Array.new
     while 1 do
-      chunk = _recv(timeout)
+      chunk = _recv timeout
+      break if chunk == nil 
       data << chunk[4]
       break if chunk[0] == Pigato::W_REPLY
     end
@@ -36,9 +37,15 @@ class PigatoClient
 
   def _recv timeout
     items = @poller.poll(timeout)
-    if items
+    if items 
       messages = []
-      @client.recv_strings messages
+      d1 = Time.now
+      while 1 do
+        @client.recv_strings(messages, ZMQ::DONTWAIT)
+        break if messages.length > 0 || ((Time.now - d1) * 1000 > timeout)
+      end
+
+      return nil if messages.length == 0
 
       # header
       if messages.shift != Pigato::C_CLIENT
@@ -47,7 +54,6 @@ class PigatoClient
 
       return messages
     end
-
     nil
   end
 
