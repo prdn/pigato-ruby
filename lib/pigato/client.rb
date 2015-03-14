@@ -9,50 +9,48 @@ class PigatoClient
     @context = ZMQ::Context.new(1)
     @client = nil
     @poller = ZMQ::Poller.new
+    @timeout = 2500
 
     reconnect_to_broker
   end
 
-  def send service, request, timeout = 2500
+  def send service, request, timeout = @timeout
     request = [request.to_json]
 
     rid = SecureRandom.uuid
     request = [Pigato::C_CLIENT, Pigato::W_REQUEST, service, rid].concat(request)
     @client.send_strings request
 
-    res = Array.new
-    res << rid
-
-    data = Array.new
+    res = [] 
     while 1 do
-      chunk = _recv timeout
-      break if chunk == nil 
-      data << chunk[4]
+      chunk = _recv(rid, timeout)
+      break if chunk == nil
+      res << chunk[4]
       break if chunk[0] == Pigato::W_REPLY
     end
 
-    res << data
     res
   end
 
-  def _recv timeout
+  def _recv rid, timeout = @timeout
     items = @poller.poll(timeout)
     if items 
-      messages = []
+      msg = []
       d1 = Time.now
       while 1 do
-        @client.recv_strings(messages, ZMQ::DONTWAIT)
-        break if messages.length > 0 || ((Time.now - d1) * 1000 > timeout)
+        @client.recv_strings(msg, ZMQ::DONTWAIT)
+        msg = [] if msg.length < 5 || msg[3] != rid
+        break if msg.length > 0 || ((Time.now - d1) * 1000 > timeout)
       end
 
-      return nil if messages.length == 0
+      return nil if msg.length == 0
 
       # header
-      if messages.shift != Pigato::C_CLIENT
+      if msg.shift != Pigato::C_CLIENT
         raise RuntimeError, "Not a valid Pigato message"
       end
 
-      return messages
+      return msg 
     end
     nil
   end

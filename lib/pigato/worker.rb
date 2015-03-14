@@ -37,28 +37,29 @@ class PigatoWorker
 
       items = @poller.poll(@timeout) 
       if items
-        messages = []
-        @worker.recv_strings messages
+        msg = []
+        @worker.recv_strings msg
 
         @liveness = HEARTBEAT_LIVENESS
 
-        header = messages.shift
+        header = msg.shift
         if header != Pigato::W_WORKER
           puts "E: Header is not Pigato::WORKER"
           next
         end
 
-        command = messages.shift
+        command = msg.shift
 
         case command
         when Pigato::W_REQUEST
           # We should pop and save as many addresses as there are
           # up to a null part, but for now, just save one...
-          @reply_to = messages.shift
-          @reply_service = messages.shift
-          messages.shift # empty
-          @reply_rid = messages.shift
-          return messages[0] # We have a request to process
+          @reply_to = msg.shift
+          @reply_service = msg.shift
+          msg.shift # empty
+          @reply_rid = msg.shift
+          val = msg[0] # We have a request to process
+          return val 
         when Pigato::W_HEARTBEAT
           # do nothing
         when Pigato::W_DISCONNECT
