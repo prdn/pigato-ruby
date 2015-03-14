@@ -1,4 +1,4 @@
-require "json"
+require "oj"
 require "ffi-rzmq"
 require "securerandom"
 
@@ -25,7 +25,7 @@ class PigatoWorker
   end
   
   def reply reply
-    reply = [@reply_to, '', @reply_rid, '0'].concat([reply.to_json])
+    reply = [@reply_to, '', @reply_rid, '0'].concat([Oj.dump(reply)])
     send_to_broker Pigato::W_REPLY, reply, nil
   end
 
@@ -58,7 +58,7 @@ class PigatoWorker
           @reply_service = msg.shift
           msg.shift # empty
           @reply_rid = msg.shift
-          val = msg[0] # We have a request to process
+          val = Oj.load(msg[0]) # We have a request to process
           return val 
         when Pigato::W_HEARTBEAT
           # do nothing

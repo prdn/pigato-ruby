@@ -1,5 +1,4 @@
-require "json"
-require "ffi-rzmq"
+require "oj"
 require "securerandom"
 
 class PigatoClient
@@ -15,7 +14,7 @@ class PigatoClient
   end
 
   def send service, request, timeout = @timeout
-    request = [request.to_json]
+    request = [Oj.dump(request)]
 
     rid = SecureRandom.uuid
     request = [Pigato::C_CLIENT, Pigato::W_REQUEST, service, rid].concat(request)
@@ -25,7 +24,7 @@ class PigatoClient
     while 1 do
       chunk = _recv(rid, timeout)
       break if chunk == nil
-      res << chunk[4]
+      res << Oj.load(chunk[4])
       break if chunk[0] == Pigato::W_REPLY
     end
 
