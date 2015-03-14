@@ -45,6 +45,7 @@ class PigatoWorker
         header = messages.shift
         if header != Pigato::W_WORKER
           puts "E: Header is not Pigato::WORKER"
+          next
         end
 
         command = messages.shift
@@ -53,7 +54,6 @@ class PigatoWorker
         when Pigato::W_REQUEST
           # We should pop and save as many addresses as there are
           # up to a null part, but for now, just save one...
-          puts "REQUEST"
           @reply_to = messages.shift
           @reply_service = messages.shift
           messages.shift # empty

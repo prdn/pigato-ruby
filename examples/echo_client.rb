@@ -4,11 +4,12 @@ require "rubygems"
 require "#{File.dirname(__FILE__)}/../lib/pigato.rb"
 
 client = PigatoClient.new('tcp://localhost:55555')
-requests = 10
+requests = 1000
+d1 = Time.now
 requests.times do |i|
   begin
-    puts client.send('echo', 'Hello world')
+    client.send('echo', 'Hello world')
   end
 end
-
-puts "#{requests} requests/replies processed"
+d2 = Time.now
+puts "#{requests} requests/replies processed (#{(d2 - d1) * 1000} milliseconds)"
