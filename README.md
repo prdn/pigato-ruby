@@ -1,5 +1,7 @@
 # PIGATO-RUBY - Ruby Client / Worker for PIGATO
 
+[![PIGATO](http://ardoino.com/pub/pigato-ruby-200.png)](https://github.com/prdn/pigato-ruby)
+
 **PIGATO - an high-performance microservices framework based on ZeroMQ**
 
 PIGATO aims to offer an high-performance, reliable, scalable and extensible service-oriented framework supporting multiple programming languages: Node.js/Io.js and Ruby.
