@@ -40,6 +40,7 @@ class PigatoClient
         @client.recv_strings(msg, ZMQ::DONTWAIT)
         msg = [] if msg.length < 5 || msg[3] != rid
         break if msg.length > 0 || ((Time.now - d1) * 1000 > timeout)
+        sleep(1.0 / 50.0)
       end
 
       return nil if msg.length == 0
