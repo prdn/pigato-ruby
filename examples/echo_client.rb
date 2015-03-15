@@ -2,6 +2,7 @@
 
 require "rubygems"
 require "#{File.dirname(__FILE__)}/../lib/pigato.rb"
+#require "pigato"
 
 client = PigatoClient.new('tcp://localhost:55555')
 requests = 1000

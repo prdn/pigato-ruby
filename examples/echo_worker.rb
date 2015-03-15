@@ -2,6 +2,7 @@
 
 require "rubygems"
 require "#{File.dirname(__FILE__)}/../lib/pigato.rb"
+#require "pigato"
 
 worker = PigatoWorker.new('tcp://localhost:55555', 'echo')
 reply = nil

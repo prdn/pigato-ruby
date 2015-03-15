@@ -3,6 +3,7 @@ require "ffi-rzmq"
 require "securerandom"
 
 class PigatoWorker
+
   HEARTBEAT_LIVENESS = 3 # 3-5 is reasonable
 
   def initialize broker, service
