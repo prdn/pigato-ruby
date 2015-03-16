@@ -1,16 +1,16 @@
 require "oj"
 require "securerandom"
 
-class PigatoClient
+class Pigato::Client
 
   def initialize broker
     @broker = broker
     @context = ZMQ::Context.new(1)
-    @client = nil
+    @socket = nil
     @poller = ZMQ::Poller.new
     @timeout = 2500
 
-    reconnect_to_broker
+    start
   end
 
   def send service, request, timeout = @timeout
@@ -18,7 +18,7 @@ class PigatoClient
 
     rid = SecureRandom.uuid
     request = [Pigato::C_CLIENT, Pigato::W_REQUEST, service, rid].concat(request)
-    @client.send_strings request
+    @socket.send_strings request
 
     res = [] 
     while 1 do
@@ -38,7 +38,7 @@ class PigatoClient
       msg = []
       d1 = Time.now
       while 1 do
-        @client.recv_strings(msg, ZMQ::DONTWAIT)
+        @socket.recv_strings(msg, ZMQ::DONTWAIT)
         msg = [] if msg.length < 5 || msg[3] != rid
         break if msg.length > 0 || ((Time.now - d1) * 1000 > timeout)
         sleep(1.0 / 50.0)
@@ -55,16 +55,24 @@ class PigatoClient
     end
     nil
   end
+  
+  def start
+    reconnect_to_broker
+  end
+
+  def stop
+    $socket.close
+  end
 
   def reconnect_to_broker
-    if @client
-      @poller.deregister @client, ZMQ::DEALER
+    if @socket
+      @poller.deregister @socket, ZMQ::DEALER
     end
 
-    @client = @context.socket ZMQ::DEALER
-    @client.setsockopt ZMQ::LINGER, 0
-    @client.setsockopt ZMQ::IDENTITY, SecureRandom.uuid
-    @client.connect @broker
-    @poller.register @client, ZMQ::POLLIN
+    @socket = @context.socket ZMQ::DEALER
+    @socket.setsockopt ZMQ::LINGER, 0
+    @socket.setsockopt ZMQ::IDENTITY, SecureRandom.uuid
+    @socket.connect @broker
+    @poller.register @socket, ZMQ::POLLIN
   end
 end
