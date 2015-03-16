@@ -9,7 +9,7 @@ requests = 1000
 d1 = Time.now
 requests.times do |i|
   begin
-    client.send('echo', 'Hello world')
+    client.request('echo', 'Hello world')
   end
 end
 d2 = Time.now

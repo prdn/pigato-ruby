@@ -13,7 +13,7 @@ class Pigato::Client
     start
   end
 
-  def send service, request, timeout = @timeout
+  def request service, request, timeout = @timeout
     request = [Oj.dump(request)]
 
     rid = SecureRandom.uuid
