@@ -28,6 +28,7 @@ class PigatoClient
       break if chunk[0] == Pigato::W_REPLY
     end
 
+    return res[0] if res.length === 1
     res
   end
 
