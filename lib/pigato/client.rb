@@ -3,17 +3,27 @@ require "securerandom"
 
 class Pigato::Client
 
-  def initialize broker
+  def initialize broker, conf = {}
     @broker = broker
     @context = ZMQ::Context.new(1)
     @socket = nil
     @poller = ZMQ::Poller.new
-    @timeout = 2500
 
-    start
+    @conf = {
+      :autostart => false,
+      :timeout => 2500
+    }
+
+    @conf.merge!(conf)
+
+    if @conf[:autostart]
+      start
+    end
   end
 
-  def request service, request, timeout = @timeout
+  def request service, request, timeout = @conf[:timeout]
+    return nil if @socket == nil;
+
     request = [Oj.dump(request)]
 
     rid = SecureRandom.uuid
