@@ -25,6 +25,36 @@ Or install it yourself as:
 
     $ gem install pigato
 
+## API
+
+### Client
+#### `Pigato::Client.new(addr, conf)`
+
+**Example**
+
+```
+require "rubygems"
+require "pigato"
+
+client = Pigato::Client.new('tcp://localhost:55555', { :autostart => true })
+client.request('echo', 'Hello world')
+```
+
+### Worker
+#### `Pigato::Worker.new(addr, serviceName)`
+
+**Example**
+
+```
+worker = Pigato::Worker.new('tcp://localhost:55555', 'echo')
+reply = nil
+
+loop do
+  request = worker.recv reply
+  worker.reply request
+end
+```
+
 ## Usage
 
 In order to run the example you need to run Node.js PIGATO example Broker from the [main project](https://github.com/prdn/pigato/tree/master/examples)
