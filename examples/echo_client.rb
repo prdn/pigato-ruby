@@ -5,7 +5,7 @@ require "#{File.dirname(__FILE__)}/../lib/pigato.rb"
 #require "pigato"
 
 client = Pigato::Client.new('tcp://localhost:55555', { :autostart => true })
-requests = 10
+requests = 1000
 d1 = Time.now
 requests.times do |i|
   begin
