@@ -46,6 +46,8 @@ class BaseTest < Test::Unit::TestCase
     a = ['a', 1, false]
     assert_equal(a, @client.request(@ns + 'echo', a))
     
+    assert_equal(1, @client.request(@ns + 'echo', 1))
+    
     assert_equal(nil, @client.request(@ns + 'empty', nil))
   end
 end

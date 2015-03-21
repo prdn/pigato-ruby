@@ -36,8 +36,8 @@ class Pigato::Client
       break if chunk[0] == Pigato::W_REPLY
     end
 
-    return nil if res.length == 1
-    return res[0] if res.length == 0
+    return nil if res.length == 0
+    return res[0] if res.length == 1
     res
   end
 
@@ -63,14 +63,13 @@ class Pigato::Client
   end
 
   def stop
-    $socket.close
+    if @socket
+      $socket.close
+    end
   end
 
   def reconnect_to_broker
-    if @socket
-      @socket.close
-    end
-
+    stop
     @socket = @context.socket ZMQ::DEALER
     @context.linger = 0
     @socket.identity = SecureRandom.uuid
