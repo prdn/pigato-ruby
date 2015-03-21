@@ -64,7 +64,7 @@ class Pigato::Client
 
   def stop
     if @socket
-      $socket.close
+      @socket.close
     end
   end
 
