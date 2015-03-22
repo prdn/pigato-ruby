@@ -9,7 +9,7 @@ requests = 1000
 d1 = Time.now
 requests.times do |i|
   begin
-    client.request('echo', 'Hello world')
+    client.request('echo', 'Hello world', { "nocache" => 1 })
   end
 end
 d2 = Time.now

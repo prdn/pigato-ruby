@@ -36,8 +36,8 @@ Or install it yourself as:
 require "rubygems"
 require "pigato"
 
-client = Pigato::Client.new('tcp://localhost:55555', { :autostart => true })
-client.request('echo', 'Hello world')
+client = Pigato::Client.new('tcp://localhost:55555', { :autostart => 1 })
+client.request('echo', 'Hello world', { 'nocache' => 1 })
 ```
 
 ### Worker

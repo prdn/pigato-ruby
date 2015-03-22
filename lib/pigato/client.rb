@@ -17,10 +17,10 @@ class Pigato::Client
     end
   end
 
-  def request service, request, timeout = @conf[:timeout]
+  def request service, request, opts = {} 
     return nil if @socket == nil;
 
-    request = [Oj.dump(request)]
+    request = [Oj.dump(request), Oj.dump(opts)]
 
     rid = SecureRandom.uuid
     request = [Pigato::C_CLIENT, Pigato::W_REQUEST, service, rid].concat(request)
@@ -30,7 +30,7 @@ class Pigato::Client
 
     res = [] 
     while 1 do
-      chunk = _recv(rid, timeout)
+      chunk = _recv rid
       break if chunk == nil
       res << Oj.load(chunk[4])
       break if chunk[0] == Pigato::W_REPLY
@@ -41,8 +41,8 @@ class Pigato::Client
     res
   end
 
-  def _recv rid, timeout = @timeout
-    @socket.rcvtimeo = timeout;
+  def _recv rid 
+    @socket.rcvtimeo = @conf[:timeout]
     data = []
     d1 = Time.now
     msg = @socket.recv_message()
