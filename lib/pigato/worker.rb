@@ -25,7 +25,7 @@ class Pigato::Worker
     send_to_broker Pigato::W_REPLY, reply
   end
 
-  def recv reply
+  def recv
     loop do
       @reply_rid = nil
       @reply_to = nil

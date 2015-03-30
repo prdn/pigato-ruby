@@ -7,7 +7,6 @@ require "#{File.dirname(__FILE__)}/../lib/pigato.rb"
 worker = Pigato::Worker.new('tcp://localhost:55555', 'echo')
 
 loop do
-  reply = nil
-  request = worker.recv reply
+  request = worker.recv 
   worker.reply request
 end
