@@ -22,11 +22,13 @@ class Pigato::Client
     end
   end
 
+  def getid
+    tid = "#" + Process.pid.to_s + "|" + Thread.current.object_id.to_s
+    tid
+  end
  
   def request service, request, opts = {}
-    start if @sockets[Thread.current.object_id] == nil
-    socket = @sockets[Thread.current.object_id]
-     
+    socket = @sockets[getid()]
     return nil if socket == nil;
 
     request = [Oj.dump(request), Oj.dump(opts)]
@@ -51,7 +53,7 @@ class Pigato::Client
   end
 
   def _recv rid 
-    socket = @sockets[Thread.current.object_id]
+    socket = @sockets[getid()]
     socket.rcvtimeo = @conf[:timeout]
     data = []
     d1 = Time.now
@@ -73,10 +75,11 @@ class Pigato::Client
   end
 
   def stop
-    socket = @sockets[Thread.current.object_id]
+    tid = getid()
+    socket = @sockets[tid]
     if socket
       socket.close
-      @sockets.delete(Thread.current.object_id)
+      @sockets.delete(tid)
     end
   end
 
@@ -85,6 +88,6 @@ class Pigato::Client
     socket = @ctx.socket ZMQ::DEALER
     socket.identity = SecureRandom.uuid
     socket.connect @broker
-    @sockets[Thread.current.object_id] = socket
+    @sockets[getid()] = socket
   end
 end
