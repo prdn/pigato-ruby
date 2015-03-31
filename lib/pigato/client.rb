@@ -3,12 +3,8 @@ require 'thread'
 class Pigato::Client
 
   def initialize broker, conf = {}
-    @mtx = Mutex.new
     @broker = broker
-    @ctx = ZMQ::Context.new
-    @ctx.linger = 0
-
-    @sockets = {}
+    @ctxs = {}
 
     @conf = {
       :autostart => false,
@@ -28,9 +24,10 @@ class Pigato::Client
   end
  
   def request service, request, opts = {}
-    socket = @sockets[getid()]
-    return nil if socket == nil;
-
+    return nil if @ctxs[getid()] == nil 
+    
+    socket = @ctxs[getid()]['socket']
+    
     request = [Oj.dump(request), Oj.dump(opts)]
 
     rid = SecureRandom.uuid
@@ -53,7 +50,7 @@ class Pigato::Client
   end
 
   def _recv rid 
-    socket = @sockets[getid()]
+    socket = @ctxs[getid()]['socket']
     socket.rcvtimeo = @conf[:timeout]
     data = []
     d1 = Time.now
@@ -76,18 +73,20 @@ class Pigato::Client
 
   def stop
     tid = getid()
-    socket = @sockets[tid]
-    if socket
-      socket.close
-      @sockets.delete(tid)
+    if @ctxs[tid]
+      @ctxs[tid]['socket'].close
+      @ctxs[tid]['ctx'].destroy
+      @ctxs.delete(tid)
     end
   end
 
   def reconnect_to_broker
     stop
-    socket = @ctx.socket ZMQ::DEALER
+    ctx = ZMQ::Context.new
+    ctx.linger = 0
+    socket = ctx.socket ZMQ::DEALER
     socket.identity = SecureRandom.uuid
     socket.connect @broker
-    @sockets[getid()] = socket
+    @ctxs[getid()] = { 'socket' => socket, 'ctx' => ctx }
   end
 end
