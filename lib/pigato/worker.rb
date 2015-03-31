@@ -5,8 +5,6 @@ class Pigato::Worker
   def initialize broker, service
     @broker = broker
     @service = service
-    @context = ZMQ::Context.new(1)
-    @socket = nil # Socket to broker
     @heartbeat_at = 0 # When to send HEARTBEAT (relative to time.time(), so in seconds)
     @liveness = 0 # How many attempts left
     @timeout = 2500
@@ -80,9 +78,13 @@ class Pigato::Worker
     if @socket
       @socket.close
     end
+    if @ctx
+      @ctx.destroy
+    end
 
-    @socket = @context.socket ZMQ::DEALER
-    @context.linger = 0
+    @ctx = ZMQ::Context.new
+    @socket = @ctx.socket ZMQ::DEALER
+    @ctx.linger = 0
     @socket.identity = SecureRandom.uuid
     @socket.connect @broker
     @socket.rcvtimeo = @timeout;

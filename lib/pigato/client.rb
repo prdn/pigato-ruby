@@ -1,9 +1,14 @@
+require 'thread'
+
 class Pigato::Client
 
   def initialize broker, conf = {}
+    @mtx = Mutex.new
     @broker = broker
-    @context = ZMQ::Context.new(1)
-    @socket = nil
+    @ctx = ZMQ::Context.new
+    @ctx.linger = 0
+
+    @sockets = {}
 
     @conf = {
       :autostart => false,
@@ -17,8 +22,12 @@ class Pigato::Client
     end
   end
 
-  def request service, request, opts = {} 
-    return nil if @socket == nil;
+ 
+  def request service, request, opts = {}
+    start if @sockets[Thread.current.object_id] == nil
+    socket = @sockets[Thread.current.object_id]
+     
+    return nil if socket == nil;
 
     request = [Oj.dump(request), Oj.dump(opts)]
 
@@ -26,7 +35,7 @@ class Pigato::Client
     request = [Pigato::C_CLIENT, Pigato::W_REQUEST, service, rid].concat(request)
     msg = ZMQ::Message.new
     request.reverse.each{|p| msg.push(ZMQ::Frame(p))}
-    @socket.send_message msg
+    socket.send_message msg
 
     res = [] 
     while 1 do
@@ -42,10 +51,11 @@ class Pigato::Client
   end
 
   def _recv rid 
-    @socket.rcvtimeo = @conf[:timeout]
+    socket = @sockets[Thread.current.object_id]
+    socket.rcvtimeo = @conf[:timeout]
     data = []
     d1 = Time.now
-    msg = @socket.recv_message()
+    msg = socket.recv_message()
     while 1 do
       break if !msg || msg.size == 0
       data << msg.pop.data
@@ -63,16 +73,18 @@ class Pigato::Client
   end
 
   def stop
-    if @socket
-      @socket.close
+    socket = @sockets[Thread.current.object_id]
+    if socket
+      socket.close
+      @sockets.delete(Thread.current.object_id)
     end
   end
 
   def reconnect_to_broker
     stop
-    @socket = @context.socket ZMQ::DEALER
-    @context.linger = 0
-    @socket.identity = SecureRandom.uuid
-    @socket.connect @broker
+    socket = @ctx.socket ZMQ::DEALER
+    socket.identity = SecureRandom.uuid
+    socket.connect @broker
+    @sockets[Thread.current.object_id] = socket
   end
 end
