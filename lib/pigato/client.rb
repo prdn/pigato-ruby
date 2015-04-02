@@ -87,15 +87,30 @@ class Pigato::Client
     end
   end
 
+  def setctx
+    @ctx = ZMQ::Context.new
+    @ctx.linger = 0
+    $PIGATO_zmq_ctx = @ctx
+  end
+
   def reconnect_to_broker
     stop
-    if $PIGATO_zmq_ctx == nil
-      $PIGATO_zmq_ctx = ZMQ::Context.new
-      $PIGATO_zmq_ctx.linger = 0
+
+    @ctx = $PIGATO_zmq_ctx
+
+    if @ctx == nil
+      setctx
     end
-    socket = $PIGATO_zmq_ctx.socket ZMQ::DEALER
+
+    socket = @ctx.socket ZMQ::DEALER
     socket.identity = SecureRandom.uuid
     socket.connect @broker
     @sockets[get_thread_id()] = socket
+  rescue ZMQ::Error => e
+    puts e
+    if e.include? 'ZMQ::Context instance belongs to another process'
+      setctx
+      reconnect_to_broker
+    end
   end
 end

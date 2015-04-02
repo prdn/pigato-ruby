@@ -13,6 +13,7 @@ client = Pigato::Client.new('tcp://localhost:55555')
 #binding.remote_pry
 
 client.start
+client.start
 requests = 1000
 d1 = Time.now
 requests.times do |i|
