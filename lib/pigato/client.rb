@@ -81,18 +81,27 @@ class Pigato::Client
     tid = get_thread_id()
     if @sockets[tid]
       @sockets[tid].close
+      @sockets.delete(tid)
+    end
+
+    pid = get_proc_id()
+    if @ctxs[pid]
+      @ctxs[pid].destroy
+      @ctxs.delete(pid)
     end
   end
 
   def reconnect_to_broker
     stop
     ctx = @ctxs[get_proc_id()]
-    ctx = ZMQ::Context.new if ctx == nil
-    ctx.linger = 0
+    if ctx == nil
+      ctx = ZMQ::Context.new
+      ctx.linger = 0
+      @ctxs[get_proc_id()] = ctx
+    end
     socket = ctx.socket ZMQ::DEALER
     socket.identity = SecureRandom.uuid
     socket.connect @broker
     @sockets[get_thread_id()] = socket
-    @ctxs[get_proc_id()] = ctx
   end
 end
