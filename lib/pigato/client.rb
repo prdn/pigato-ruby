@@ -83,12 +83,6 @@ class Pigato::Client
       @sockets[tid].close
       @sockets.delete(tid)
     end
-
-    pid = get_proc_id()
-    if @ctxs[pid]
-      @ctxs[pid].destroy
-      @ctxs.delete(tid)
-    end
   end
 
   def reconnect_to_broker
