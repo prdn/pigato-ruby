@@ -1,11 +1,10 @@
 require 'thread'
 
-$pigato_zmq_ctx = nil
-
 class Pigato::Client
 
   def initialize broker, conf = {}
     @broker = broker
+    @ctxs = {}
     @sockets = {}
 
     @conf = {
@@ -84,16 +83,23 @@ class Pigato::Client
       @sockets[tid].close
       @sockets.delete(tid)
     end
+
+    pid = get_proc_id()
+    if @ctxs[pid]
+      @ctxs[pid].destroy
+      @ctxs.delete(tid)
+    end
   end
 
   def reconnect_to_broker
     stop
-    if $pigato_zmq_ctx == nil
+    ctx = @ctxs[get_proc_id()]
+    if ctx == nil
       ctx = ZMQ::Context.new
       ctx.linger = 0
-      $pigato_zmq_ctx = ctx
+      @ctxs[get_proc_id()] = ctx
     end
-    socket = $pigato_zmq_ctx.socket ZMQ::DEALER
+    socket = ctx.socket ZMQ::DEALER
     socket.identity = SecureRandom.uuid
     socket.connect @broker
     @sockets[get_thread_id()] = socket
