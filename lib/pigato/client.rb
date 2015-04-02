@@ -1,5 +1,7 @@
 require 'thread'
 
+$PIGATO_zmq_ctx = 0
+
 class Pigato::Client
 
   def initialize broker, conf = {}
@@ -25,7 +27,7 @@ class Pigato::Client
   end
  
   def get_thread_id
-    tid = get_proc_id() + "|" + Thread.current.object_id.to_s
+    tid = "#" + get_proc_id() + "#" + Thread.current.object_id.to_s
     tid
   end
  
@@ -87,13 +89,11 @@ class Pigato::Client
 
   def reconnect_to_broker
     stop
-    ctx = @ctxs[get_proc_id()]
-    if ctx == nil
-      ctx = ZMQ::Context.new
-      ctx.linger = 0
-      @ctxs[get_proc_id()] = ctx
+    if $PIGATO_zmq_ctx == nil
+      $PIGATO_zmq_ctx = ZMQ::Context.new
+      $PIGATO_zmq_ctx.linger = 0
     end
-    socket = ctx.socket ZMQ::DEALER
+    socket = $PIGATO_zmq_ctx.socket ZMQ::DEALER
     socket.identity = SecureRandom.uuid
     socket.connect @broker
     @sockets[get_thread_id()] = socket
