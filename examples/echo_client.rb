@@ -7,12 +7,10 @@ require "#{File.dirname(__FILE__)}/../lib/pigato.rb"
 require 'thread'
 
 client = Pigato::Client.new('tcp://localhost:55555')
-
-#Process.daemon
-
-#binding.remote_pry
-
 client.start
+
+Process.daemon
+
 client.start
 requests = 1000
 d1 = Time.now
