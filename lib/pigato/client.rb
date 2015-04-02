@@ -1,6 +1,6 @@
 require 'thread'
 
-$PIGATO_zmq_ctx = 0
+$PIGATO_zmq_ctx = nil
 
 class Pigato::Client
 
