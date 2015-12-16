@@ -1,11 +1,13 @@
-require 'thread'
+require "#{File.dirname(__FILE__)}/base.rb"
 
-class Pigato::Client
+class Pigato::Client < Pigato::Base
+
+  @@mtx = Mutex.new
+  @@ctxs = {}
+  @@sockets = {}
 
   def initialize broker, conf = {}
     @broker = broker
-    @ctxs = {}
-    @sockets = {}
 
     @conf = {
       :autostart => false,
@@ -14,26 +16,18 @@ class Pigato::Client
 
     @conf.merge!(conf)
 
+    init
+    
     if @conf[:autostart]
       start
     end
   end
 
-  def get_proc_id
-    pid = "#" + Process.pid.to_s
-    pid
-  end
- 
-  def get_thread_id
-    tid = "#" + get_proc_id() + "#" + Thread.current.object_id.to_s
-    tid
-  end
- 
   def request service, request, opts = {}
-    return nil if @sockets[get_thread_id()] == nil 
+    iid = get_iid
+    return nil if @@sockets[iid] == nil
     
-    socket = @sockets[get_thread_id()]
-    
+    socket = @@sockets[iid]
     request = [Oj.dump(request), Oj.dump(opts)]
 
     rid = SecureRandom.uuid
@@ -56,8 +50,10 @@ class Pigato::Client
   end
 
   def _recv rid 
-    socket = @sockets[get_thread_id()]
+    iid = get_iid
+    socket = @@sockets[iid]
     socket.rcvtimeo = @conf[:timeout]
+    
     data = []
     d1 = Time.now
     msg = socket.recv_message()
@@ -74,35 +70,15 @@ class Pigato::Client
   end
   
   def start
-    reconnect_to_broker
+    stop
+    sock_create
+    super 
+  rescue ZMQ::Error => e
+    puts e
   end
 
   def stop
-    tid = get_thread_id()
-    if @sockets[tid]
-      @sockets[tid].close
-      @sockets.delete(tid)
-    end
-
-    pid = get_proc_id()
-    if @ctxs[pid]
-      @ctxs[pid].destroy
-      @ctxs.delete(pid)
-    end
-  end
-
-  def reconnect_to_broker
-    stop
-
-    ctx = ZMQ::Context.new
-    ctx.linger = 0
-    @ctxs[get_proc_id()] = ctx
-
-    socket = ctx.socket ZMQ::DEALER
-    socket.identity = SecureRandom.uuid
-    socket.connect @broker
-    @sockets[get_thread_id()] = socket
-  rescue ZMQ::Error => e
-    puts e
+    sock_close
+    super 
   end
 end
