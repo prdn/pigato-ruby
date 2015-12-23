@@ -25,7 +25,7 @@ class Pigato::Client < Pigato::Base
 
   def request service, request, opts = {}
     iid = get_iid
-    return nil if @@sockets[iid] == nil
+    start if @@sockets[iid] == nil && @conf[:autostart]
     
     socket = @@sockets[iid]
     request = [Oj.dump(request), Oj.dump(opts)]

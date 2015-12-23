@@ -10,10 +10,9 @@ def start
 
   (0..5).each do |tid|
     ts << Thread.new {
-      client = Pigato::Client.new('tcp://127.0.0.1:55555')
-      client.start
+      client = Pigato::Client.new('tcp://127.0.0.1:55555', { :autostart => true })
 
-      requests = 10000
+      requests = 1000
       d1 = Time.now
       requests.times do |i|
         begin
