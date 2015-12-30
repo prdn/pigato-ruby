@@ -38,17 +38,22 @@ class Pigato::Worker < Pigato::Base
   def recv
 
     loop do
-
-      iid = get_iid
-
-      socket = get_socket 
-      return nil if socket.nil? 
-
       @reply_rid = nil
       @reply_to = nil
       @reply_service = nil
 
-      msg = socket.recv_message 
+      iid = get_iid
+      
+      start if @@sockets[iid] == nil && @conf[:autostart]
+
+      socket = get_socket
+      return nil if socket.nil?
+
+      socket.rcvtimeo = @conf[:timeout]
+
+      msg = socket.recv_message
+
+      return nil if msg.nil?
 
       if msg && msg.size 
         @liveness = HEARTBEAT_LIVENESS

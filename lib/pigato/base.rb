@@ -52,7 +52,7 @@ class Pigato::Base
       socket.identity = SecureRandom.uuid
       socket.connect @broker
 
-      if @conf[:timeout] then
+      if !@conf[:timeout].nil? then
         socket.rcvtimeo = @conf[:timeout];
       end
 

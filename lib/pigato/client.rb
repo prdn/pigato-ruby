@@ -27,7 +27,9 @@ class Pigato::Client < Pigato::Base
     iid = get_iid
     start if @@sockets[iid] == nil && @conf[:autostart]
     
-    socket = @@sockets[iid]
+    socket = get_socket
+    return nil if socket.nil?
+
     request = [Oj.dump(request), Oj.dump(opts)]
 
     rid = SecureRandom.uuid
