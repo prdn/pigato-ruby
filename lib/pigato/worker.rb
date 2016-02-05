@@ -28,74 +28,85 @@ class Pigato::Worker < Pigato::Base
     if @conf[:autostart]
       start
     end
+
+    Thread.new do
+      loop do
+        puts "here"
+        @@mtx.synchronize {
+          if Time.now > @heartbeat_at
+            send Pigato::W_HEARTBEAT
+            @heartbeat_at = Time.now + 0.001 * @conf[:heartbeat]
+          end
+        }
+        sleep 1
+      end
+    end
   end
   
   def reply reply
     reply = [@reply_to, '', @reply_rid, '0'].concat([Oj.dump(reply)])
     send Pigato::W_REPLY, reply
   end
-
+  
   def recv
+    val = nil
+    @@mtx.synchronize {
 
-    loop do
-      @reply_rid = nil
-      @reply_to = nil
-      @reply_service = nil
+    }
+    val
+  end
+  def _recv
+    val = nil
 
-      iid = get_iid
-      
-      start if @@sockets[iid] == nil && @conf[:autostart]
+    @reply_rid = nil
+    @reply_to = nil
+    @reply_service = nil
 
-      socket = get_socket
-      return nil if socket.nil?
+    iid = get_iid
 
-      socket.rcvtimeo = @conf[:timeout]
+    start if @@sockets[iid] == nil && @conf[:autostart]
 
-      msg = socket.recv_message
+    socket = get_socket
+    return nil if socket.nil?
 
-      return nil if msg.nil?
+    socket.rcvtimeo = @conf[:timeout]
 
-      if msg && msg.size 
-        @liveness = HEARTBEAT_LIVENESS
+    msg = socket.recv_message
 
-        header = msg.pop.data
-        if header != Pigato::W_WORKER
-          puts "E: Header is not Pigato::WORKER"
-          next
-        end
+    return nil if msg.nil?
 
-        command = msg.pop.data
+    if msg && msg.size
+      @liveness = HEARTBEAT_LIVENESS
 
-        case command
-        when Pigato::W_REQUEST
-          # We should pop and save as many addresses as there are
-          # up to a null part, but for now, just save one...
-          @reply_to = msg.pop.data
-          @reply_service = msg.pop.data
-          msg.pop # empty
-          @reply_rid = msg.pop.data
-          val = Oj.load(msg.pop.data) # We have a request to process
-          return val 
-        when Pigato::W_HEARTBEAT
-          # do nothing
-        when Pigato::W_DISCONNECT
-          start
-        else
-        end
+      header = msg.pop.data
+      if header != Pigato::W_WORKER
+        puts "E: Header is not Pigato::WORKER"
+        next
+      end
+
+      command = msg.pop.data
+
+      case command
+      when Pigato::W_REQUEST
+        @reply_to = msg.pop.data
+        @reply_service = msg.pop.data
+        msg.pop # empty
+        @reply_rid = msg.pop.data
+        val = Oj.load(msg.pop.data) 
+      when Pigato::W_HEARTBEAT
+      when Pigato::W_DISCONNECT
+        start
       else
-        @liveness -= 1
-        if @liveness == 0
-          sleep 0.001 * @conf[:reconnect]
-          start
-        end
       end
-
-      if Time.now > @heartbeat_at
-        send Pigato::W_HEARTBEAT
-        @heartbeat_at = Time.now + 0.001 * @conf[:heartbeat]
+    else
+      @liveness -= 1
+      if @liveness == 0
+        sleep 0.001 * @conf[:reconnect]
+        start
       end
-
     end
+
+    val
   end
 
   def start 
