@@ -1,7 +1,6 @@
 require "#{File.dirname(__FILE__)}/base.rb"
 
 class Pigato::Client < Pigato::Base
-
   @@mtx = Mutex.new
   @@ctxs = {}
   @@sockets = {}
@@ -23,20 +22,25 @@ class Pigato::Client < Pigato::Base
     end
   end
 
-  def request service, request, opts = {}
+  def send msg
     iid = get_iid
     start if @@sockets[iid] == nil && @conf[:autostart]
-    
     socket = get_socket
     return nil if socket.nil?
+    socket.send_message msg
+    true
+  end
 
+  def request service, request, opts = {}
     request = [Oj.dump(request), Oj.dump(opts)]
 
     rid = SecureRandom.uuid
     request = [Pigato::C_CLIENT, Pigato::W_REQUEST, service, rid].concat(request)
     msg = ZMQ::Message.new
     request.reverse.each{|p| msg.push(ZMQ::Frame(p))}
-    socket.send_message msg
+
+    res = send msg
+    return nil if res.nil?
 
     res = [] 
     while 1 do

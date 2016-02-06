@@ -1,8 +1,10 @@
 class Pigato::Base
 
   @@sockets = {}
+  @@sockets_ids = {}
   @@mtxs = {}
   @@mtx = Mutex.new
+  @@global_heartbeat_at = Time.now
 
   def init 
     @iid = SecureRandom.uuid
@@ -49,7 +51,8 @@ class Pigato::Base
       end
 
       socket = ctx.socket ZMQ::DEALER
-      socket.identity = SecureRandom.uuid
+      sid = SecureRandom.uuid
+      socket.identity = sid 
       socket.connect @broker
 
       if !@conf[:timeout].nil? then
@@ -57,6 +60,7 @@ class Pigato::Base
       end
 
       @@sockets[get_iid] = socket
+      @@sockets_ids[get_iid] = sid 
     }
   end
   
@@ -73,6 +77,7 @@ class Pigato::Base
         rescue
         end
         @@sockets.delete(iid)
+        @@sockets_ids.delete(iid)
       end
     }
   end

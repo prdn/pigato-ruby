@@ -22,7 +22,7 @@ class Pigato::Worker < Pigato::Base
     @reply_to = nil
     @reply_rid = nil
     @reply_service = nil
-    
+  
     init
 
     if @conf[:autostart]
@@ -30,15 +30,24 @@ class Pigato::Worker < Pigato::Base
     end
 
     Thread.new do
+      client = Pigato::Client.new(broker, { :autostart => true })
       loop do
-        puts "here"
-        @@mtx.synchronize {
-          if Time.now > @heartbeat_at
-            send Pigato::W_HEARTBEAT
-            @heartbeat_at = Time.now + 0.001 * @conf[:heartbeat]
+        @@mtx.lock
+        begin
+          if Time.now > @@global_heartbeat_at
+            @@sockets_ids.each do |iid, sid|
+              request = [Pigato::C_CLIENT, Pigato::W_HEARTBEAT, "worker", sid]
+              msg = ZMQ::Message.new
+              request.reverse.each{|p| msg.push(ZMQ::Frame(p))}
+              client.send msg
+            end
+            @@global_heartbeat_at = Time.now + 2 
           end
-        }
-        sleep 1
+        rescue => e
+          puts e
+        end
+        @@mtx.unlock
+        sleep 2
       end
     end
   end
@@ -49,13 +58,6 @@ class Pigato::Worker < Pigato::Base
   end
   
   def recv
-    val = nil
-    @@mtx.synchronize {
-
-    }
-    val
-  end
-  def _recv
     val = nil
 
     @reply_rid = nil
@@ -73,15 +75,13 @@ class Pigato::Worker < Pigato::Base
 
     msg = socket.recv_message
 
-    return nil if msg.nil?
-
     if msg && msg.size
       @liveness = HEARTBEAT_LIVENESS
 
       header = msg.pop.data
       if header != Pigato::W_WORKER
         puts "E: Header is not Pigato::WORKER"
-        next
+        return nil
       end
 
       command = msg.pop.data
@@ -104,6 +104,11 @@ class Pigato::Worker < Pigato::Base
         sleep 0.001 * @conf[:reconnect]
         start
       end
+    end
+
+    if Time.now > @heartbeat_at
+      send Pigato::W_HEARTBEAT
+      @heartbeat_at = Time.now + 0.001 * @conf[:heartbeat]
     end
 
     val
