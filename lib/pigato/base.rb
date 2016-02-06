@@ -56,7 +56,7 @@ class Pigato::Base
       socket.connect @broker
 
       if !@conf[:timeout].nil? then
-        socket.rcvtimeo = @conf[:timeout];
+        socket.rcvtimeo = @conf[:timeout]
       end
 
       @@sockets[get_iid] = socket

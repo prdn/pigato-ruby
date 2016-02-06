@@ -19,6 +19,8 @@ def start
         else
           sleep 0.1
         end
+        sleep 40
+        worker.start
       end
     }
   end
