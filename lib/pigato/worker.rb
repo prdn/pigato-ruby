@@ -11,14 +11,13 @@ class Pigato::Worker < Pigato::Base
     @conf = {
       :autostart => false,
       :timeout => 2500,
-      :heartbeat => 2500,
       :reconnect => 2500
     }
     
     @conf.merge!(conf)
 
+    @heartbeat_at = Time.now
     @liveness = 0
-    @heartbeat_at = 0
     @reply_to = nil
     @reply_rid = nil
     @reply_service = nil
@@ -41,13 +40,13 @@ class Pigato::Worker < Pigato::Base
               request.reverse.each{|p| msg.push(ZMQ::Frame(p))}
               client.send msg
             end
-            @@global_heartbeat_at = Time.now + 2 
+            @@global_heartbeat_at = Time.now + 1
           end
         rescue => e
           puts e
         end
         @@mtx.unlock
-        sleep 2
+        sleep 1
       end
     end
   end
@@ -105,12 +104,12 @@ class Pigato::Worker < Pigato::Base
         start
       end
     end
-
+      
     if Time.now > @heartbeat_at
-      send Pigato::W_HEARTBEAT
-      @heartbeat_at = Time.now + 0.001 * @conf[:heartbeat]
+      send(Pigato::W_HEARTBEAT, ['', Oj.dump({ 'concurrency' => 1 })])
+      @heartbeat_at = Time.now + 0.001 * @conf[:timeout]
     end
-
+    
     val
   end
 
@@ -120,7 +119,6 @@ class Pigato::Worker < Pigato::Base
     send Pigato::W_READY, @service
     super
     @liveness = HEARTBEAT_LIVENESS
-    @heartbeat_at = Time.now + 0.001 * @conf[:heartbeat]
   end
 
   def stop

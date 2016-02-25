@@ -61,13 +61,19 @@ class Pigato::Client < Pigato::Base
     socket.rcvtimeo = @conf[:timeout]
     
     data = []
-    d1 = Time.now
+    
     msg = socket.recv_message()
     while 1 do
-      break if !msg || msg.size == 0
+      break if msg.nil? || msg.size == 0
       data << msg.pop.data
     end
-    data = [] if data[3] != rid
+
+    if data[3] != rid  
+      data = []
+      if conf[:logger]
+        conf[:logger].error("PigatoClient: RID mismatch")
+      end
+    end
 
     return nil if data.length == 0
 
