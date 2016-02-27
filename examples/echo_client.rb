@@ -8,17 +8,18 @@ require 'thread'
 def start
   ts = []
 
-  (0..10).each do |tid|
+  (0..5).each do |tid|
     ts << Thread.new {
       client = Pigato::Client.new('tcp://127.0.0.1:55555', { :autostart => true, :timeout => 20000 })
 
-      requests = 1000
+      requests = 50000
       success = 0
       d1 = Time.now
       requests.times do |i|
         begin
-          res = client.request('echo', 'Hello world1')
-          if res
+          sw = "Hello world #{i}"
+          res = client.request('echo', sw)
+          if res == sw
             success += 1
           else
             puts "nil reply"
@@ -35,7 +36,7 @@ def start
   end
 end
 
-(0..4).each do |pid|
+(0..2).each do |pid|
   pid = fork do
     start
   end

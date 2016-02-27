@@ -42,10 +42,12 @@ class Pigato::Client < Pigato::Base
     res = send msg
     return nil if res.nil?
 
+    rtimer = Time.now + (@conf[:timeout] * 0.001)
+
     res = [] 
-    while 1 do
+    while Time.now <= rtimer do
       chunk = _recv rid
-      break if chunk == nil
+      next if chunk == nil
       res << Oj.load(chunk[4])
       break if chunk[0] == Pigato::W_REPLY
     end
@@ -58,7 +60,7 @@ class Pigato::Client < Pigato::Base
   def _recv rid 
     iid = get_iid
     socket = @@sockets[iid]
-    socket.rcvtimeo = @conf[:timeout]
+    socket.rcvtimeo = 2500
     
     data = []
     
@@ -70,8 +72,8 @@ class Pigato::Client < Pigato::Base
 
     if data[3] != rid  
       data = []
-      if conf[:logger]
-        conf[:logger].error("PigatoClient: RID mismatch")
+      if @conf[:logger]
+        @conf[:logger].error("PigatoClient: RID mismatch #{data[3]}/#{rid}")
       end
     end
 
