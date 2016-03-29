@@ -27,7 +27,7 @@ def start
   end
 end
 
-(0..4).each do |pid|
+(0..2).each do |pid|
   fork do
     start
   end

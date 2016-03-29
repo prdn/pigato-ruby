@@ -28,27 +28,32 @@ class Pigato::Worker < Pigato::Base
       start
     end
 
-    Thread.new do
-      client = Pigato::Client.new(broker, { :autostart => true })
-      loop do
-        @@mtx.lock
-        begin
-          if Time.now > @@global_heartbeat_at
-            @@sockets_ids.each do |iid, sid|
-              request = [Pigato::C_CLIENT, Pigato::W_HEARTBEAT, "worker", sid]
-              msg = ZMQ::Message.new
-              request.reverse.each{|p| msg.push(ZMQ::Frame(p))}
-              client.send msg
+    @@mtx.lock
+    if @@global_thread.nil?
+      @@global_thread = true
+      Thread.new do
+        client = Pigato::Client.new(broker, { :autostart => true })
+        loop do
+          @@mtx.lock
+          begin
+            if Time.now > @@global_heartbeat_at
+              @@sockets_ids.each do |iid, sid|
+                request = [Pigato::C_CLIENT, Pigato::W_HEARTBEAT, "worker", sid]
+                msg = ZMQ::Message.new
+                request.reverse.each{|p| msg.push(ZMQ::Frame(p))}
+                client.send msg
+              end
+              @@global_heartbeat_at = Time.now + 2.5
             end
-            @@global_heartbeat_at = Time.now + 2.5
+          rescue => e
+            puts e
           end
-        rescue => e
-          puts e
+          @@mtx.unlock
+          sleep 2.5
         end
-        @@mtx.unlock
-        sleep 2.5
       end
     end
+    @@mtx.unlock
   end
   
   def reply reply

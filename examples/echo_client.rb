@@ -12,7 +12,7 @@ def start
     ts << Thread.new {
       client = Pigato::Client.new('tcp://127.0.0.1:55555', { :autostart => true, :timeout => 20000 })
 
-      requests = 50000
+      requests = 1000
       success = 0
       d1 = Time.now
       requests.times do |i|
@@ -36,7 +36,7 @@ def start
   end
 end
 
-(0..2).each do |pid|
+(0..1).each do |pid|
   pid = fork do
     start
   end

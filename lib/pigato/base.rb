@@ -5,6 +5,7 @@ class Pigato::Base
   @@mtxs = {}
   @@mtx = Mutex.new
   @@global_heartbeat_at = Time.now
+  @@global_thread = nil
 
   def init 
     @iid = SecureRandom.uuid
