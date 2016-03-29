@@ -16,7 +16,7 @@ class Pigato::Worker < Pigato::Base
     
     @conf.merge!(conf)
 
-    @heartbeat_at = Time.now
+    @heartbeat_at = Time.now - 1.minutes
     @liveness = 0
     @reply_to = nil
     @reply_rid = nil
@@ -40,13 +40,13 @@ class Pigato::Worker < Pigato::Base
               request.reverse.each{|p| msg.push(ZMQ::Frame(p))}
               client.send msg
             end
-            @@global_heartbeat_at = Time.now + 1
+            @@global_heartbeat_at = Time.now + 2.5
           end
         rescue => e
           puts e
         end
         @@mtx.unlock
-        sleep 1
+        sleep 2.5
       end
     end
   end
@@ -107,7 +107,7 @@ class Pigato::Worker < Pigato::Base
       
     if Time.now > @heartbeat_at
       send(Pigato::W_HEARTBEAT, ['', Oj.dump({ 'concurrency' => 1 })])
-      @heartbeat_at = Time.now + 0.001 * @conf[:timeout]
+      @heartbeat_at = Time.now + 0.001 * (@conf[:timeout] * 1.5)
     end
     
     val
