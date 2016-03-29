@@ -16,7 +16,7 @@ class Pigato::Worker < Pigato::Base
     
     @conf.merge!(conf)
 
-    @heartbeat_at = Time.now - 1.minutes
+    @heartbeat_at = Time.now - 60
     @liveness = 0
     @reply_to = nil
     @reply_rid = nil
