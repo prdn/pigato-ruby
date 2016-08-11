@@ -6,7 +6,7 @@
 
 PIGATO aims to offer an high-performance, reliable, scalable and extensible service-oriented framework supporting multiple programming languages: Node.js/Io.js and Ruby.
 
-* [Official PIGATO project page](http://prdn.github.io/pigato/) 
+* [Official PIGATO project page](http://prdn.github.io/pigato/)
 * [Node.js and io.js broker/client/worker](https://github.com/prdn/pigato)
 
 ## Installation
@@ -47,10 +47,11 @@ client.request('echo', 'Hello world', { 'nocache' => 1 })
 
 ```
 worker = Pigato::Worker.new('tcp://localhost:55555', 'echo')
+worker.start
 reply = nil
 
 loop do
-  request = worker.recv reply
+  request = worker.recv
   worker.reply request
 end
 ```
