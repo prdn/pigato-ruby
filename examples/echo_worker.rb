@@ -7,7 +7,7 @@ require "#{File.dirname(__FILE__)}/../lib/pigato.rb"
 def start
   ts = []
 
-  (0..10).each do |tid|
+  (0..100).each do |tid|
     ts << Thread.new {
       worker = Pigato::Worker.new('tcp://127.0.0.1:55555', 'echo')
       worker.start
@@ -17,9 +17,9 @@ def start
         if !request.nil?
           worker.reply request
         end
-        #sleep 0.1
       end
     }
+    sleep 0.5
   end
 
   ts.each do |to|
